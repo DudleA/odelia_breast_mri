@@ -55,8 +55,8 @@ def preprocess(path_dir):
             img_side.save(path_out_dir/path_img.name)
 
 if __name__ == "__main__":
-    path_data = Path('/mnt/hdd/datasets/breast/DUKE/dataset')
-    path_out = Path('/mnt/hdd/datasets/breast/DUKE/dataset_unilateral_256x256x32')
+    path_data = Path('/mnt/0b8c3d56-c60c-4d29-88d1-4cc3340c9116/02_MRI_Data/MRI_Breast_Dataset_005_Duke/manifest-1607053360376/dataset')
+    path_out = Path('/mnt/0b8c3d56-c60c-4d29-88d1-4cc3340c9116/02_MRI_Data/MRI_Breast_Dataset_005_Duke/manifest-1607053360376/dataset_unilateral_256x256x32')
     path_out.mkdir(parents=True, exist_ok=True)
     pool = Pool()
     pool.map(preprocess, path_data.iterdir())

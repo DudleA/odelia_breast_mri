@@ -21,12 +21,12 @@ if __name__ == "__main__":
     path_run_dir = Path.cwd() / 'runs' / str(current_time)
     path_run_dir.mkdir(parents=True, exist_ok=True)
     accelerator = 'gpu' if torch.cuda.is_available() else 'cpu'
-
+    # accelerator = 'cpu'
 
     # ------------ Load Data ----------------
     ds = DUKE_Dataset3D(
         flip=True, 
-        path_root = '/mnt/hdd/datasets/breast/DUKE/dataset_256x256x32_lr_2'
+        path_root = '/mnt/3aef1f67-f1f1-46a8-9ba1-1387521ef48d/Swarm_learning/Data/dataset_unilateral_256x256x32'
     )
 
     # WARNING: Very simple split approach
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         enable_checkpointing=True,
         check_val_every_n_epoch=1,
         log_every_n_steps=log_every_n_steps, 
-        auto_lr_find=False,
+        # auto_lr_find=False,
         # limit_train_batches=1,
         # limit_val_batches=0, # 0 = disable validation - Note: Early Stopping no longer available 
         min_epochs=20,

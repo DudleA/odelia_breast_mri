@@ -13,7 +13,8 @@ import pandas as pd
 
 
 # Setting 
-path_root = Path('/mnt/hdd/datasets/breast/DUKE/')
+# path_root = Path('/mnt/hdd/datasets/breast/DUKE/')
+path_root = Path('/mnt/0b8c3d56-c60c-4d29-88d1-4cc3340c9116/02_MRI_Data/MRI_Breast_Dataset_005_Duke/manifest-1607053360376')
 
 path_root_in = path_root/'dataset_raw'
 path_root_out = path_root/'dataset'
