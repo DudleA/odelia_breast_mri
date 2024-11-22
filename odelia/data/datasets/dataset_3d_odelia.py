@@ -62,7 +62,7 @@ class ODELIA_Dataset3D(data.Dataset):
             path_csv = self.path_root/institution/'metadata/split.csv'
             df = self.load_split(path_csv, fold=fold, split=split, fraction=fraction)
             df['Institution'] = institution
-
+            df['UID'] = df['UID'].str[4:]
             # Verify files exist
             uids = self.run_item_crawler(self.path_root/institution/'data_unilateral')
             df = df[df['UID'].isin(uids)]
@@ -94,7 +94,7 @@ class ODELIA_Dataset3D(data.Dataset):
         if institution != "DUKE":
             target = int(target == 2)
     
-        img = self.load_img(self.path_root/institution/'data_unilateral'/uid/'Sub.nii.gz')
+        img = self.load_img(self.path_root/institution/'data_unilateral'/uid/'sub.nii.gz')
         img = self.transform(img)
 
         return {'uid':uid, 'source': img, 'target':target}
