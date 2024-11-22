@@ -28,13 +28,13 @@ def create_split(df, uid_col='UID', label_col='Label', group_col='PatientID'):
 
 
 if __name__ == "__main__":
-    for dataset in [ 'CAM']: # 'CAM', 'MHA', 'RSH', 'RUMC', 'UKA', 'UMCU'
+    for dataset in ['USZ']: # 'CAM', 'MHA', 'RSH', 'RUMC', 'UKA', 'UMCU'
         print(f"----------------- {dataset} ---------------")
 
-        path_root = Path('/home/gustav/Documents/datasets/ODELIA/')/dataset
+        path_root = Path('/mnt/3aef1f67-f1f1-46a8-9ba1-1387521ef48d/Swarm_learning/Data/Data_selected')
         path_root_metadata = path_root/'metadata'
 
-        df = pd.read_excel(path_root_metadata/'annotation.xlsx', dtype={'ID':str})
+        df = pd.read_csv(path_root_metadata/'clinical_data_USZ_v2.csv', dtype={'ID':str})
         df = df.rename(columns={'ID': 'PatientID'})
 
         if dataset == 'CAM':
@@ -45,9 +45,9 @@ if __name__ == "__main__":
         severity_order = {
             'No lesion': 0,
             'Benign lesion': 1,
-            'Malignant lesion (DCIS)': 2,
-            'Malignant lesion (unknown)': 3,
-            'Malignant lesion (Invasive)': 4,
+            'DCIS': 2,
+            'Malignant lesion': 3,
+            # 'Malignant lesion (Invasive)': 4,
         }
         
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
         assert len(df) == 2*df['PatientID'].nunique(), "Number of Lesions must be 2* Number of Patients"
         
 
-        df['Class'] = df['Lesion'].map({'No lesion':0, 'Benign lesion':1, 'Malignant lesion (DCIS)': 2, 'Malignant lesion (Invasive)':2, 'Malignant lesion (unknown)':2})
+        df['Class'] = df['Lesion'].map({'No lesion':0, 'Benign lesion':1, 'DCIS': 2, 'Malignant lesion':2,})
         print(df['Class'].value_counts(dropna=False))
 
         df_splits = create_split(df, uid_col='UID', label_col='Class', group_col='PatientID')

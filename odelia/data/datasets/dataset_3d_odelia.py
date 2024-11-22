@@ -8,8 +8,9 @@ from .augmentations.augmentations_3d import ImageOrSubjectToTensor, ZNormalizati
 
 
 class ODELIA_Dataset3D(data.Dataset):
-    PATH_ROOT = Path('/home/gustav/Documents/datasets/ODELIA/')
-    ALL_INSTITUTIONS = ['CAM', 'RSH', 'RUMC', 'UKA', 'UMCU']
+    PATH_ROOT = Path('/mnt/3aef1f67-f1f1-46a8-9ba1-1387521ef48d/Swarm_learning/Data/Data_selected')
+    # ALL_INSTITUTIONS = ['CAM', 'RSH', 'RUMC', 'UKA', 'UMCU']
+    ALL_INSTITUTIONS = ['USZ']
     LABEL = 'Class'
 
     def __init__(

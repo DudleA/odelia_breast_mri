@@ -7,6 +7,8 @@ from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from torch.utils.data.dataset import Subset
 from pytorch_lightning.loggers import WandbLogger
+import sys
+sys.path.append('/mnt/3aef1f67-f1f1-46a8-9ba1-1387521ef48d/Swarm_learning/Scripts/odelia_breast_mri1')
 
 from odelia.data.datasets import ODELIA_Dataset3D
 from odelia.data.datamodules import DataModule
@@ -23,8 +25,8 @@ if __name__ == "__main__":
     current_time = datetime.now().strftime("%Y_%m_%d_%H%M%S")
     path_run_dir = Path.cwd() / 'runs' / args.institution / str(current_time)
     path_run_dir.mkdir(parents=True, exist_ok=True)
-    accelerator = 'gpu' if torch.cuda.is_available() else 'cpu'
-
+    # accelerator = 'gpu' if torch.cuda.is_available() else 'cpu'
+    accelerator = 'cpu'
 
     # ------------ Load Data ----------------
     ds_train = ODELIA_Dataset3D(institutions=args.institution, split='train', random_flip=True, random_rotate=True, random_inverse=False, noise=True)
