@@ -25,8 +25,7 @@ if __name__ == "__main__":
     current_time = datetime.now().strftime("%Y_%m_%d_%H%M%S")
     path_run_dir = Path.cwd() / 'runs' / args.institution / str(current_time)
     path_run_dir.mkdir(parents=True, exist_ok=True)
-    # accelerator = 'gpu' if torch.cuda.is_available() else 'cpu'
-    accelerator = 'cpu'
+    accelerator = 'gpu' if torch.cuda.is_available() else 'cpu'
 
     # ------------ Load Data ----------------
     ds_train = ODELIA_Dataset3D(institutions=args.institution, split='train', random_flip=True, random_rotate=True, random_inverse=False, noise=True)

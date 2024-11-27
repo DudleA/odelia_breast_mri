@@ -10,6 +10,8 @@ from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt 
 import seaborn as sns 
 import pandas as pd 
+import sys
+sys.path.append('/mnt/3aef1f67-f1f1-46a8-9ba1-1387521ef48d/Swarm_learning/Scripts/odelia_breast_mri1')
 
 from odelia.data.datasets import ODELIA_Dataset3D
 from odelia.data.datamodules import DataModule
@@ -20,7 +22,7 @@ from odelia.utils.roc_curve import plot_roc_curve, cm2acc, cm2x
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path_run', default='/home/gustav/code/odelia_breast_mri/runs/RSH/2024_11_14_155246_pretrained', type=str)
+    parser.add_argument('--path_run', default='/mnt/3aef1f67-f1f1-46a8-9ba1-1387521ef48d/Swarm_learning/Models/USZ/2024_11_26_210119', type=str)
     parser.add_argument('--test_institution', default='', type=str) # Leave empty to test model on the test set of the training institution 
     args = parser.parse_args()
 
