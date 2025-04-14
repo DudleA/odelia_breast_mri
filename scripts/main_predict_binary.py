@@ -35,7 +35,8 @@ if __name__ == "__main__":
     test_institution = train_institution if args.test_institution == "" else args.test_institution
     path_out = Path().cwd()/'results'/train_institution/version/test_institution
     path_out.mkdir(parents=True, exist_ok=True)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = 'cpu'
     fontdict = {'fontsize': 10, 'fontweight': 'bold'}
 
     # ------------ Logging --------------------

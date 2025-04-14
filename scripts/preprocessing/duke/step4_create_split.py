@@ -4,7 +4,7 @@ import pandas as pd
 
 from sklearn.model_selection import StratifiedGroupKFold, StratifiedKFold
 
-path_root = Path('/home/gustav/Documents/datasets/ODELIA/')
+path_root = Path('/mnt/3aef1f67-f1f1-46a8-9ba1-1387521ef48d/Swarm_learning/Data/Data_selected')
 path_root_dataset = path_root/'DUKE'
 path_root_metadata = path_root_dataset/'metadata'
 

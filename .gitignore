@@ -9,6 +9,7 @@
 !*.yml
 !*.ui
 !*.yaml
+*.csv
 
 !requirements.txt
 !version.txt
@@ -23,3 +24,5 @@
 /results
 
 !/media/**
+
+/scripts/wandb
