@@ -36,13 +36,17 @@ if __name__ == "__main__":
         path_root_metadata = path_root/'metadata'
 
         # df = pd.read_csv(path_root_metadata/'clinical_data_USZ_v2.csv', dtype={'ID':str})
-        df = pd.read_excel(path_root_metadata/'annot_local_model.xlsx', dtype={'ID':str}, header=0)
-        df = df.rename(columns={'ID': 'PatientID'})
+        # df = pd.read_excel(path_root_metadata/'annot_local_model.xlsx', dtype={'ID':str}, header=0)
+        df =  pd.read_excel(path_root_metadata/'annotation.xlsx', dtype={'ID':str}, index_col=0)
+        df = df.rename(columns={'Patient ID': 'PatientID', 'Type of Lesion':'Lesion'})
+        df = df.dropna(subset=['StudyInstanceUID'])
+        assert ~df[['PatientID', 'StudyInstanceUID', 'Lesion']].isna().any().any(), "Missing values detected"
 
         """Remove cases with missing image"""
         img_folder = '/mnt/3aef1f67-f1f1-46a8-9ba1-1387521ef48d/Swarm_learning/Data/Data_all/USZ_1/data_unilateral'
         list_img = os.listdir(img_folder)
         print("Nb annotations:", len(df.index))
+        print("Missing images")
         for i in df.index:
             uid = df.loc[i, 'StudyInstanceUID']
             if uid + '_left' not in list_img:
@@ -58,45 +62,69 @@ if __name__ == "__main__":
         if dataset == 'CAM':
             df['PatientID'] = df['PatientID'].str.upper()
 
+        """Add annotations for cases with no lesions (i.e. contralateral breast which was not annotated)"""
+        list_study_uids = df['StudyInstanceUID'].unique()
+        for study_uid in list_study_uids:
+            pid = df.loc[df['StudyInstanceUID'] == study_uid, 'PatientID'].values[0]
+            """Exception: if BIRADS higher than 2"""
+            birads = df.loc[df['StudyInstanceUID'] == study_uid, 'BIRADS'].values
+            birads = birads[(birads != 'not provided') & pd.notna(birads)].astype(int)
+            if len(birads) > 0:
+                if ('not provided' in df.loc[df['StudyInstanceUID'] == study_uid, 'Side'].values) & (birads.max() > 2):
+                    continue
+            if 'left' not in df.loc[df['StudyInstanceUID'] == study_uid, 'Side'].values:
+                df.loc[df.last_valid_index() + 1, ['PatientID', 'StudyInstanceUID', 'Side', 'Lesion']] = [pid, study_uid, 'left', 'No lesion']
+            if 'right' not in df.loc[df['StudyInstanceUID'] == study_uid, 'Side'].values:
+                df.loc[df.last_valid_index() + 1, ['PatientID', 'StudyInstanceUID', 'Side', 'Lesion']] = [pid, study_uid, 'right', 'No lesion']
 
-        # Define lesion severity order
-        severity_order = {
+
+        """Fill lesion type as a function of the BIRADS class"""
+        df.loc[df['BIRADS'] == '1', 'Lesion'] = 'No lesion'
+        df.loc[df['BIRADS'].isin(['2', '3']) & df['Side'].isin(['left', 'right']) & (df['Lesion'] == 'not provided'), 'Lesion'] = 'Benign lesion'
+        df.loc[df['BIRADS'].isin(['4', '5', '6']) & df['Side'].isin(['left', 'right']) & (df['Lesion'] == 'not provided'), 'Lesion'] = \
+            'Invasive Cancer (no special type)'
+
+        # Define class mapping
+        class_mapping = {
             'No lesion': 0,
             'Benign lesion': 1,
             'DCIS': 2,
-            'Malignant lesion': 3,
-            # 'Malignant lesion (Invasive)': 4,
+            'Proliferative with atypia': 2,
+            'Invasive Cancer (no special type)': 2, # TODO should invasive cancer be separate class?
+            'Invasive Cancer (lobular carcinoma)': 2,
+            'Invasive Cancer (all other)':2,
+            'not provided': pd.NA
         }
         
 
-        df_left = df[['StudyInstanceUID', 'PatientID', 'Left side']]
-        df_left = df_left.rename(columns={'Left side': 'Lesion'})
-        df_left.insert(1, 'Side', 'left')
+        df_left = df[df['Side'] == "left"]
+        df_left = df_left[['PatientID', 'StudyInstanceUID', 'Side', 'Lesion']]
         df_left.insert(0, 'UID', df_left['StudyInstanceUID'].astype(str)+'_'+df_left['Side'])
 
-        df_left = df_left.dropna(subset='Lesion').reset_index(drop=True)
-        df_left['Severity'] = df_left['Lesion'].map(severity_order)
-        df_left = df_left.loc[df_left.groupby('StudyInstanceUID')['Severity'].idxmax()]
-        df_left = df_left.drop(columns=['Severity'])
+        df_left['Class'] = df_left['Lesion'].map(class_mapping)
+        df_left = df_left.dropna(subset='Class').reset_index(drop=True) # TODO: Should the entire study be removed?
+        df_left = df_left.astype({'Class': int})
+        df_left = df_left.loc[df_left.groupby('StudyInstanceUID')['Class'].idxmax()]
 
-        df_right = df[['StudyInstanceUID', 'PatientID', 'Right side']]
-        df_right = df_right.rename(columns={'Right side': 'Lesion'})
-        df_right.insert(1, 'Side', 'right')
+        df_right = df[df['Side'] == "right"] 
+        df_right = df_right[['PatientID', 'StudyInstanceUID', 'Side', 'Lesion']]
         df_right.insert(0, 'UID', df_right['StudyInstanceUID'].astype(str)+'_'+df_right['Side'])
 
-        df_right = df_right.dropna(subset='Lesion').reset_index(drop=True)
-        df_right['Severity'] = df_right['Lesion'].map(severity_order)
-        df_right = df_right.loc[df_right.groupby('StudyInstanceUID')['Severity'].idxmax()]
-        df_right = df_right.drop(columns=['Severity'])
-        
-        
-        df = pd.concat([df_left, df_right]).reset_index(drop=True)
-        print("Studies", df['StudyInstanceUID'].nunique())
-        assert len(df) == 2*df['StudyInstanceUID'].nunique(), "Number of Lesions must be 2* Number of Patients"
-        
+        df_right['Class'] = df_right['Lesion'].map(class_mapping)
+        df_right = df_right.dropna(subset='Class').reset_index(drop=True) # TODO: Should the entire study be removed?
+        df_right = df_right.astype({'Class': int})
+        df_right = df_right.loc[df_right.groupby('StudyInstanceUID')['Class'].idxmax()]
 
-        df['Class'] = df['Lesion'].map({'No lesion':0, 'Benign lesion':1, 'DCIS': 2, 'Malignant lesion':2,})
-        print(df['Class'].value_counts(dropna=False))
+        # ------------------- Merge left and right ----------------------
+        df = pd.concat([df_left, df_right]).reset_index(drop=True)        
+        
+        df['Class'] = df['Class'].astype(int)
+        print("Patients", df['PatientID'].nunique())
+        print("Studies", df['StudyInstanceUID'].nunique())
+        print("Breasts", df['UID'].nunique())
+
+        for class_name, count in df['Class'].value_counts().sort_index().items():
+            print(f"Lesion Type {class_name}: {count}")
 
         df_splits = create_split(df, uid_col='UID', label_col='Class', group_col='PatientID')
         df_splits.to_csv(path_root_metadata/'split.csv', index=False)
