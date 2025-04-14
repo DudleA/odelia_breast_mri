@@ -2,6 +2,7 @@ from pathlib import Path
 import pandas as pd 
 from multiprocessing import Pool
 from tqdm import tqdm
+import os
 
 from sklearn.model_selection import StratifiedGroupKFold
 
@@ -31,11 +32,28 @@ if __name__ == "__main__":
     for dataset in ['USZ']: # 'CAM', 'MHA', 'RSH', 'RUMC', 'UKA', 'UMCU'
         print(f"----------------- {dataset} ---------------")
 
-        path_root = Path('/mnt/3aef1f67-f1f1-46a8-9ba1-1387521ef48d/Swarm_learning/Data/Data_selected')
+        path_root = Path('/mnt/3aef1f67-f1f1-46a8-9ba1-1387521ef48d/Swarm_learning/Data/Data_all/USZ_1')
         path_root_metadata = path_root/'metadata'
 
-        df = pd.read_csv(path_root_metadata/'clinical_data_USZ_v2.csv', dtype={'ID':str})
+        # df = pd.read_csv(path_root_metadata/'clinical_data_USZ_v2.csv', dtype={'ID':str})
+        df = pd.read_excel(path_root_metadata/'annot_local_model.xlsx', dtype={'ID':str}, header=0)
         df = df.rename(columns={'ID': 'PatientID'})
+
+        """Remove cases with missing image"""
+        img_folder = '/mnt/3aef1f67-f1f1-46a8-9ba1-1387521ef48d/Swarm_learning/Data/Data_all/USZ_1/data_unilateral'
+        list_img = os.listdir(img_folder)
+        print("Nb annotations:", len(df.index))
+        for i in df.index:
+            uid = df.loc[i, 'StudyInstanceUID']
+            if uid + '_left' not in list_img:
+                print(df.loc[i, 'PatientID'])
+                df.drop(labels=i, inplace=True)
+                print(uid)
+            elif uid + '_right' not in list_img:
+                print(df.loc[i, 'PatientID'])
+                df.drop(labels=i, inplace=True)
+                print(uid)
+
 
         if dataset == 'CAM':
             df['PatientID'] = df['PatientID'].str.upper()
@@ -51,30 +69,30 @@ if __name__ == "__main__":
         }
         
 
-        df_left = df[['PatientID',	'Left side']]
+        df_left = df[['StudyInstanceUID', 'PatientID', 'Left side']]
         df_left = df_left.rename(columns={'Left side': 'Lesion'})
         df_left.insert(1, 'Side', 'left')
-        df_left.insert(0, 'UID', df_left['PatientID'].astype(str)+'_'+df_left['Side'])
+        df_left.insert(0, 'UID', df_left['StudyInstanceUID'].astype(str)+'_'+df_left['Side'])
 
         df_left = df_left.dropna(subset='Lesion').reset_index(drop=True)
         df_left['Severity'] = df_left['Lesion'].map(severity_order)
-        df_left = df_left.loc[df_left.groupby('PatientID')['Severity'].idxmax()]
+        df_left = df_left.loc[df_left.groupby('StudyInstanceUID')['Severity'].idxmax()]
         df_left = df_left.drop(columns=['Severity'])
 
-        df_right = df[['PatientID', 'Right side']]
+        df_right = df[['StudyInstanceUID', 'PatientID', 'Right side']]
         df_right = df_right.rename(columns={'Right side': 'Lesion'})
         df_right.insert(1, 'Side', 'right')
-        df_right.insert(0, 'UID', df_right['PatientID'].astype(str)+'_'+df_right['Side'])
+        df_right.insert(0, 'UID', df_right['StudyInstanceUID'].astype(str)+'_'+df_right['Side'])
 
         df_right = df_right.dropna(subset='Lesion').reset_index(drop=True)
         df_right['Severity'] = df_right['Lesion'].map(severity_order)
-        df_right = df_right.loc[df_right.groupby('PatientID')['Severity'].idxmax()]
+        df_right = df_right.loc[df_right.groupby('StudyInstanceUID')['Severity'].idxmax()]
         df_right = df_right.drop(columns=['Severity'])
         
         
         df = pd.concat([df_left, df_right]).reset_index(drop=True)
-        print("Patients", df['PatientID'].nunique())
-        assert len(df) == 2*df['PatientID'].nunique(), "Number of Lesions must be 2* Number of Patients"
+        print("Studies", df['StudyInstanceUID'].nunique())
+        assert len(df) == 2*df['StudyInstanceUID'].nunique(), "Number of Lesions must be 2* Number of Patients"
         
 
         df['Class'] = df['Lesion'].map({'No lesion':0, 'Benign lesion':1, 'DCIS': 2, 'Malignant lesion':2,})

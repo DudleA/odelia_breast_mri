@@ -19,7 +19,7 @@ def crop_breast_height(image, margin_top=10):
 
 def preprocess(path_dir):
     # -------- Settings --------------
-    ref_img = tio.ScalarImage(path_dir/'sub.nii.gz')
+    ref_img = tio.ScalarImage(path_dir/'Sub.nii.gz')
     ref_img = tio.ToCanonical()(ref_img)
 
     # Spacing 
@@ -69,9 +69,11 @@ def preprocess(path_dir):
             img_side.save(path_out_dir/path_img.name)
 
 if __name__ == "__main__":
-    for dataset in ['USZ']: # 'CAM', 'MHA', 'RSH', 'RUMC', 'UKA', 'UMCU', 'DUKE'
+    for dataset in ['USZ']: # 'CAM', 'MHA', 'RSH', 'RUMC', 'UKA', 'UMCU', 'DUKE', 'USZ'
 
-        path_root = Path('/mnt/3aef1f67-f1f1-46a8-9ba1-1387521ef48d/Swarm_learning/Data/Data_selected')
+        path_root = Path('/mnt/3aef1f67-f1f1-46a8-9ba1-1387521ef48d/Swarm_learning/Data/Data_all/USZ_1')
+        # path_root = Path('/mnt/0b8c3d56-c60c-4d29-88d1-4cc3340c9116/02_MRI_Data/MRI_Breast_Dataset_005_Duke/manifest-1607053360376')
+
         path_root_in_data = path_root/'data'
     
         path_root_out_data =  path_root/'data_unilateral'
